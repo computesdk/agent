@@ -1,3 +1,4 @@
+import process from 'node:process';
 import React, {useState} from 'react';
 import {Box, Text, useInput, useApp} from 'ink';
 import TextInput from 'ink-text-input';
@@ -8,11 +9,7 @@ type Message = {
 	content: string;
 };
 
-type Props = {
-	name: string | undefined;
-};
-
-export default function App({}: Props) {
+export default function App() {
 	const {exit} = useApp();
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [input, setInput] = useState('');
@@ -41,7 +38,7 @@ export default function App({}: Props) {
 					content:
 						"I'll help you with code-related tasks. What would you like me to help you with?",
 				};
-				setMessages(prev => [...prev, response]);
+				setMessages(previous => [...previous, response]);
 			}, 500);
 		}
 	};
@@ -52,7 +49,7 @@ export default function App({}: Props) {
 			<Box borderStyle="round" borderColor="yellow" paddingX={1} paddingY={0}>
 				<Box flexDirection="column" width="100%">
 					<Box>
-						<Text> Welcome to @ComputeSDK's </Text>
+						<Text> Welcome to @ComputeSDK&apos;s </Text>
 						<Text bold>Agent</Text>
 						<Text>!</Text>
 					</Box>
@@ -88,10 +85,10 @@ export default function App({}: Props) {
 			<Box borderStyle="round" borderColor="gray" paddingLeft={1}>
 				<Text color="cyan">› </Text>
 				<TextInput
+					placeholder="Type your message..."
 					value={input}
 					onChange={setInput}
 					onSubmit={handleSubmit}
-					placeholder="Type your message..."
 				/>
 			</Box>
 		</Box>
