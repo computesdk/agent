@@ -1,7 +1,9 @@
 import process from 'node:process';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {Box, Text, useInput, useApp} from 'ink';
 import TextInput from 'ink-text-input';
+import {AIService} from './ai.js';
+import * as dotenv from 'dotenv';
 
 type Message = {
 	id: number;
@@ -13,6 +15,25 @@ export default function App() {
 	const {exit} = useApp();
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [input, setInput] = useState('');
+	const [isProcessing, setIsProcessing] = useState(false);
+	const [aiService, setAiService] = useState<AIService | null>(null);
+	const [currentModel, setCurrentModel] = useState('claude-3-5-sonnet-20241022');
+
+	useEffect(() => {
+		try {
+			// Load environment variables
+			dotenv.config();
+			const service = new AIService();
+			setAiService(service);
+		} catch (error: any) {
+			const errorMessage: Message = {
+				id: 1,
+				type: 'assistant',
+				content: `Error initializing AI: ${error.message}. Please ensure ANTHROPIC_API_KEY is set in your .env file.`,
+			};
+			setMessages([errorMessage]);
+		}
+	}, []);
 
 	useInput((_, key) => {
 		if (key.escape) {
@@ -50,12 +71,27 @@ Or just type normally to chat!`,
 		}
 		
 		if (trimmed.startsWith('/model')) {
-			const modelMessage: Message = {
-				id: messages.length + 1,
-				type: 'assistant',
-				content: 'Model switching coming soon!',
-			};
-			setMessages([...messages, modelMessage]);
+			const parts = trimmed.split(' ');
+			if (parts.length === 1) {
+				const currentModelMessage: Message = {
+					id: messages.length + 1,
+					type: 'assistant',
+					content: `Current model: ${currentModel}\n\nAvailable models:\n- claude-3-5-sonnet-20241022\n- claude-3-5-haiku-20241022\n- claude-3-opus-20240229\n\nUse /model <name> to switch`,
+				};
+				setMessages([...messages, currentModelMessage]);
+			} else {
+				const newModel = parts.slice(1).join(' ');
+				if (aiService) {
+					aiService.setModel(newModel);
+					setCurrentModel(newModel);
+					const successMessage: Message = {
+						id: messages.length + 1,
+						type: 'assistant',
+						content: `Switched to model: ${newModel}`,
+					};
+					setMessages([...messages, successMessage]);
+				}
+			}
 			return true;
 		}
 		
@@ -88,16 +124,26 @@ Or just type normally to chat!`,
 			setMessages([...messages, newUserMessage]);
 			setInput('');
 
-			// Simulate assistant response
-			setTimeout(() => {
-				const response: Message = {
+			// Generate AI response
+			if (aiService) {
+				setIsProcessing(true);
+				aiService.generateResponse(value).then(responseText => {
+					const response: Message = {
+						id: messages.length + 2,
+						type: 'assistant',
+						content: responseText,
+					};
+					setMessages(previous => [...previous, response]);
+					setIsProcessing(false);
+				});
+			} else {
+				const errorResponse: Message = {
 					id: messages.length + 2,
 					type: 'assistant',
-					content:
-						"I'll help you with code-related tasks. What would you like me to help you with?",
+					content: 'AI service not initialized. Please check your ANTHROPIC_API_KEY.',
 				};
-				setMessages(previous => [...previous, response]);
-			}, 500);
+				setMessages(previous => [...previous, errorResponse]);
+			}
 		}
 	};
 
@@ -137,6 +183,11 @@ Or just type normally to chat!`,
 						)}
 					</Box>
 				))}
+				{isProcessing && (
+					<Box marginBottom={1}>
+						<Text color="yellow">❯ 🤖 Thinking...</Text>
+					</Box>
+				)}
 			</Box>
 
 			{/* Input */}
