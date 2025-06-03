@@ -17,7 +17,9 @@ export default function App() {
 	const [input, setInput] = useState('');
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [aiService, setAiService] = useState<AIService | null>(null);
-	const [currentModel, setCurrentModel] = useState('claude-3-5-sonnet-20241022');
+	const [currentModel, setCurrentModel] = useState(
+		'claude-3-5-sonnet-20241022',
+	);
 
 	useEffect(() => {
 		try {
@@ -43,33 +45,36 @@ export default function App() {
 
 	const handleCommand = (input: string): boolean => {
 		const trimmed = input.trim();
-		
+
 		if (trimmed === '/exit') {
 			exit();
 			return true;
 		}
-		
+
 		if (trimmed === '/clear') {
 			setMessages([]);
 			return true;
 		}
-		
+
 		if (trimmed === '/help') {
 			const helpMessage: Message = {
 				id: messages.length + 1,
 				type: 'assistant',
-				content: `Available commands:
-/help - Show this help message
-/clear - Clear the conversation
-/exit - Exit the application
-/model <name> - Switch AI model (coming soon)
-
-Or just type normally to chat!`,
+				content: [
+					'Available commands:',
+					'/help - Show this help message',
+					'/clear - Clear the conversation',
+					'/exit - Exit the application',
+					'/model <name> - Switch AI model (coming soon)',
+					'',
+					'',
+					'Or just type normally to chat!',
+				].join('\n'),
 			};
 			setMessages([...messages, helpMessage]);
 			return true;
 		}
-		
+
 		if (trimmed.startsWith('/model')) {
 			const parts = trimmed.split(' ');
 			if (parts.length === 1) {
@@ -94,7 +99,7 @@ Or just type normally to chat!`,
 			}
 			return true;
 		}
-		
+
 		if (trimmed.startsWith('/')) {
 			const errorMessage: Message = {
 				id: messages.length + 1,
@@ -104,7 +109,7 @@ Or just type normally to chat!`,
 			setMessages([...messages, errorMessage]);
 			return true;
 		}
-		
+
 		return false;
 	};
 
@@ -115,7 +120,7 @@ Or just type normally to chat!`,
 				setInput('');
 				return;
 			}
-			
+
 			const newUserMessage: Message = {
 				id: messages.length + 1,
 				type: 'user',
@@ -140,7 +145,8 @@ Or just type normally to chat!`,
 				const errorResponse: Message = {
 					id: messages.length + 2,
 					type: 'assistant',
-					content: 'AI service not initialized. Please check your ANTHROPIC_API_KEY.',
+					content:
+						'AI service not initialized. Please check your ANTHROPIC_API_KEY.',
 				};
 				setMessages(previous => [...previous, errorResponse]);
 			}
