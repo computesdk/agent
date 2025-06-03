@@ -4,26 +4,16 @@ import {render} from 'ink';
 import meow from 'meow';
 import App from './app.js';
 
-const cli = meow(
+meow(
 	`
 	Usage
 	  $ agent
 
-	Options
-		--name  Your name
-
-	Examples
-	  $ agent --name=Jane
-	  Hello, Jane
+	A terminal agent for code-related tasks
 `,
 	{
 		importMeta: import.meta,
-		flags: {
-			name: {
-				type: 'string',
-			},
-		},
 	},
 );
 
-render(<App name={cli.flags.name} />);
+render(<App />);

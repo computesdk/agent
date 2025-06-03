@@ -20,8 +20,66 @@ export default function App() {
 		}
 	});
 
+	const handleCommand = (input: string): boolean => {
+		const trimmed = input.trim();
+		
+		if (trimmed === '/exit') {
+			exit();
+			return true;
+		}
+		
+		if (trimmed === '/clear') {
+			setMessages([]);
+			return true;
+		}
+		
+		if (trimmed === '/help') {
+			const helpMessage: Message = {
+				id: messages.length + 1,
+				type: 'assistant',
+				content: `Available commands:
+/help - Show this help message
+/clear - Clear the conversation
+/exit - Exit the application
+/model <name> - Switch AI model (coming soon)
+
+Or just type normally to chat!`,
+			};
+			setMessages([...messages, helpMessage]);
+			return true;
+		}
+		
+		if (trimmed.startsWith('/model')) {
+			const modelMessage: Message = {
+				id: messages.length + 1,
+				type: 'assistant',
+				content: 'Model switching coming soon!',
+			};
+			setMessages([...messages, modelMessage]);
+			return true;
+		}
+		
+		if (trimmed.startsWith('/')) {
+			const errorMessage: Message = {
+				id: messages.length + 1,
+				type: 'assistant',
+				content: `Unknown command: ${trimmed}. Type /help for available commands.`,
+			};
+			setMessages([...messages, errorMessage]);
+			return true;
+		}
+		
+		return false;
+	};
+
 	const handleSubmit = (value: string) => {
 		if (value.trim()) {
+			// Check if it's a command
+			if (handleCommand(value)) {
+				setInput('');
+				return;
+			}
+			
 			const newUserMessage: Message = {
 				id: messages.length + 1,
 				type: 'user',
